@@ -1094,6 +1094,7 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 		"healthcheck",
 		"s3logging",
 		"papertrail",
+		"gcslogging",
 		"syslog",
 		"logentries",
 		"response_object",
@@ -1734,6 +1735,10 @@ func resourceServiceV1Update(d *schema.ResourceData, meta interface{}) error {
 					Bucket:            sf["bucket_name"].(string),
 					SecretKey:         sf["secret_key"].(string),
 					Format:            sf["format"].(string),
+					Path:              sf["path"].(string),
+					Period:            uint(sf["period"].(int)),
+					GzipLevel:         uint8(sf["gzip_level"].(int)),
+					TimestampFormat:   sf["timestamp_format"].(string),
 					MessageType:       sf["message_type"].(string),
 					ResponseCondition: sf["response_condition"].(string),
 				}
@@ -2304,7 +2309,7 @@ func resourceServiceV1Read(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		gcsl := flattenGCS(GCSList)
-		if err := d.Set("gcs", gcsl); err != nil {
+		if err := d.Set("gcslogging", gcsl); err != nil {
 			log.Printf("[WARN] Error setting gcs for (%s): %s", d.Id(), err)
 		}
 
@@ -2825,11 +2830,12 @@ func flattenGCS(gcsList []*gofastly.GCS) []map[string]interface{} {
 			"bucket_name":        currentGCS.Bucket,
 			"secret_key":         currentGCS.SecretKey,
 			"path":               currentGCS.Path,
-			"period":             int(currentGCS.Period),
 			"gzip_level":         int(currentGCS.GzipLevel),
+			"period":             int(currentGCS.Period),
 			"response_condition": currentGCS.ResponseCondition,
 			"message_type":       currentGCS.MessageType,
 			"format":             currentGCS.Format,
+			"timestamp_format":   currentGCS.TimestampFormat,
 		}
 
 		// prune any empty values that come from the default string value in structs
